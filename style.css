@@ -1,31 +1,32 @@
 <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0;
-      padding: 0;
-      background: linear-gradient(to right, #ece9e6, #ffffff); /* Light gradient background */
+      font-family: &#39;Segoe UI&#39;, Tahoma, Geneva, Verdana, sans-serif;
+      margin: 10;
+      padding: 25; /* Add padding for mobile view */
+      background: linear-gradient(to right, #ece9e6, #ffffff);
       display: flex;
       justify-content: center;
-      align-items: center;
-      min-height: 100vh;
+      align-items: flex-start; /* Align to start for scrolling */
+      min-height: 100vh; /* Changed from 10vh to 100vh to ensure full height */
       color: #333;
+      box-sizing: border-box; /* Include padding in element&#39;s total width and height */
     }
 
     .container {
       background: #ffffff;
-      padding: 30px;
-      border-radius: 15px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-      width: 100%;
-      max-width: 450px;
+      padding: 25px; /* Slightly reduced padding for mobile */
+      border-radius: 3px;
+      box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+      width: 150em;
+      max-width: 480px; /* Increased max-width for better mobile display */
       box-sizing: border-box;
-      position: relative; /* For positioning overlay */
+      position: relative;
     }
 
     h2, h3, h4 {
       text-align: center;
-      color: #007bff; /* Primary blue for headings */
-      margin-bottom: 25px;
+      color: #007bff;
+      margin-bottom: 20px; /* Adjusted margin */
     }
 
     .screen {
@@ -37,8 +38,8 @@
       display: block;
     }
 
-    input[type="text"],
-    input[type="password"] {
+    input[type=&quot;text&quot;],
+    input[type=&quot;password&quot;] {
       width: calc(100% - 20px);
       padding: 12px 10px;
       margin-bottom: 15px;
@@ -49,8 +50,8 @@
       transition: border-color 0.3s ease;
     }
 
-    input[type="text"]:focus,
-    input[type="password"]:focus {
+    input[type=&quot;text&quot;]:focus,
+    input[type=&quot;password&quot;]:focus {
       border-color: #007bff;
       outline: none;
       box-shadow: 0 0 5px rgba(0, 123, 255, 0.2);
@@ -80,7 +81,7 @@
     }
 
     .secondary-button {
-      background-color: #6c757d; /* Grey for secondary actions */
+      background-color: #6c757d;
     }
 
     .secondary-button:hover {
@@ -104,7 +105,7 @@
       display: flex;
       flex-direction: column;
       gap: 5px;
-      border-left: 5px solid #007bff; /* Accent border */
+      border-left: 5px solid #007bff;
     }
 
     .number b {
@@ -118,24 +119,24 @@
     }
 
     .status-approved {
-      color: #28a745; /* Green for approved */
+      color: #28a745;
       font-weight: bold;
     }
 
     .status-pending {
-      color: #ffc107; /* Yellow for pending */
+      color: #dc3545;
       font-weight: bold;
     }
 
     #withdrawStatus {
       text-align: center;
-      margin-top: 10px; /* Adjusted margin */
+      margin-top: 10px;
       font-size: 1.1em;
       font-weight: bold;
       color: #333;
     }
 
-    /* --- Withdrawal Form Overlay & Pop-up --- */
+    /* --- Withdrawal Form Overlay  Pop-up --- */
     .overlay {
       position: fixed;
       top: 0;
@@ -168,7 +169,7 @@
 
     .payment-methods {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); /* Responsive grid */
+      grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
       gap: 15px;
       margin-top: 20px;
       margin-bottom: 20px;
@@ -223,7 +224,7 @@
         padding: 15px;
         border-radius: 10px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        border-left: 5px solid #28a745; /* Green accent for history */
+        border-left: 5px solid #28a745;
     }
     .history-item p {
         margin: 5px 0;
@@ -249,4 +250,111 @@
         font-weight: bold;
         color: #007bff;
     }
+ /* General Data Section Styling (Optional, for better look) */
+  .data-section {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+
+  .section-divider {
+    border-top: 1px solid #eee;
+    margin: 30px 0;
+  }
+
+  /* Notification Specific Styling */
+  .notification-item {
+    background-color: #e6f7ff;
+    border: 1px solid #b3e0ff;
+    border-left: 5px solid #007bff;
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    font-size: 0.95em;
+  }
+
+  .notification-item p {
+    margin: 0 0 5px 0;
+    line-height: 1.4;
+  }
+
+  .notification-item .notification-date {
+    font-size: 0.8em;
+    color: #666;
+    display: block;
+    text-align: right;
+  }
+
+  /* Video Popup Specific Styling */
+  .video-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1001;
+  }
+
+  .video-popup-content {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.35);
+    width: 90%;
+    max-width: 600px;
+    box-sizing: border-box;
+    position: relative;
+    animation: fadeInScale 0.3s ease-out forwards;
+    text-align: center;
+  }
+
+  .video-popup-content iframe {
+    width: 100%;
+    height: 250px; /* Adjusted height for better mobile fit */
+    max-height: 315px; /* Maintain max height for larger screens */
+    border-radius: 10px;
+    margin-bottom: 15px;
+  }
+
+  .video-popup-content button {
+    width: auto;
+    padding: 10px 20px;
+    margin: 0 5px;
+  }
+
+  /* Media Queries for even better mobile responsiveness */
+  @media (max-width: 600px) {
+    .container {
+      padding: 15px;
+      margin: 10px;
+    }
+    h2, h3, h4 {
+      font-size: 1.5em;
+      margin-bottom: 15px;
+    }
+    input[type=&quot;text&quot;],
+    input[type=&quot;password&quot;],
+    button {
+      font-size: 14px;
+      padding: 10px;
+    }
+    .payment-methods {
+      grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+      gap: 10px;
+    }
+    .payment-method-option img {
+      width: 35px;
+      height: 35px;
+    }
+    .video-popup-content iframe {
+      height: 180px; /* Even smaller height for very small screens */
+    }
+  }
   </style>
