@@ -1,0 +1,252 @@
+<style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to right, #ece9e6, #ffffff); /* Light gradient background */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: #333;
+    }
+
+    .container {
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 450px;
+      box-sizing: border-box;
+      position: relative; /* For positioning overlay */
+    }
+
+    h2, h3, h4 {
+      text-align: center;
+      color: #007bff; /* Primary blue for headings */
+      margin-bottom: 25px;
+    }
+
+    .screen {
+      display: none;
+      margin-top: 20px;
+    }
+
+    .visible {
+      display: block;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: calc(100% - 20px);
+      padding: 12px 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      box-sizing: border-box;
+      font-size: 16px;
+      transition: border-color 0.3s ease;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+      border-color: #007bff;
+      outline: none;
+      box-shadow: 0 0 5px rgba(0, 123, 255, 0.2);
+    }
+
+    button {
+      width: 100%;
+      padding: 12px 0;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+      transform: translateY(-2px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .secondary-button {
+      background-color: #6c757d; /* Grey for secondary actions */
+    }
+
+    .secondary-button:hover {
+      background-color: #5a6268;
+    }
+
+    .number-list-container {
+      margin-top: 20px;
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 15px;
+      border: 1px solid #eee;
+    }
+
+    .number {
+      background: #ffffff;
+      margin-bottom: 10px;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      border-left: 5px solid #007bff; /* Accent border */
+    }
+
+    .number b {
+      color: #0056b3;
+      font-size: 1.1em;
+    }
+
+    .number span {
+      font-size: 0.95em;
+      color: #555;
+    }
+
+    .status-approved {
+      color: #28a745; /* Green for approved */
+      font-weight: bold;
+    }
+
+    .status-pending {
+      color: #ffc107; /* Yellow for pending */
+      font-weight: bold;
+    }
+
+    #withdrawStatus {
+      text-align: center;
+      margin-top: 10px; /* Adjusted margin */
+      font-size: 1.1em;
+      font-weight: bold;
+      color: #333;
+    }
+
+    /* --- Withdrawal Form Overlay & Pop-up --- */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .withdraw-form-popup {
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+      width: 90%;
+      max-width: 400px;
+      box-sizing: border-box;
+      position: relative;
+      animation: fadeInScale 0.3s ease-out forwards;
+    }
+
+    @keyframes fadeInScale {
+        from { opacity: 0; transform: scale(0.9); }
+        to { opacity: 1; transform: scale(1); }
+    }
+
+    .payment-methods {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); /* Responsive grid */
+      gap: 15px;
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
+
+    .payment-method-option {
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      padding: 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+      background: #f9f9f9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .payment-method-option.selected {
+      border-color: #007bff;
+      box-shadow: 0 0 10px rgba(0, 123, 255, 0.3);
+      background: #e7f3ff;
+      transform: translateY(-3px);
+    }
+
+    .payment-method-option img {
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+      margin-bottom: 5px;
+    }
+
+    .payment-method-option span {
+      font-size: 0.85em;
+      font-weight: bold;
+      color: #555;
+    }
+
+    /* --- Withdrawal History Styling --- */
+    .history-list-container {
+        margin-top: 25px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        border: 1px solid #eee;
+    }
+    .history-item {
+        background: #ffffff;
+        margin-bottom: 10px;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        border-left: 5px solid #28a745; /* Green accent for history */
+    }
+    .history-item p {
+        margin: 5px 0;
+        font-size: 0.95em;
+        color: #555;
+    }
+    .history-item p strong {
+        color: #333;
+    }
+    .history-item .status-pending-history {
+        color: #ffc107;
+        font-weight: bold;
+    }
+    .history-item .status-approved-history {
+        color: #28a745;
+        font-weight: bold;
+    }
+
+    .user-info {
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 1.1em;
+        font-weight: bold;
+        color: #007bff;
+    }
+  </style>
