@@ -1,5 +1,3 @@
-<script>
-  // Your Firebase Configuration (Keep it secure in a real app!)
   const firebaseConfig = {
     apiKey: "AIzaSyBNhvhiGQiZ3t7-FNEGl46Xi4XYrFsHgLc", // Replace with your actual API Key
     authDomain: "apkmalia-38ac2.firebaseapp.com",
@@ -10,13 +8,12 @@
     appId: "1:764227278305:web:038a8cd3f0aff2af65aea0"
   };
 
-  // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db = firebase.database();
 
-  let currentUser = null; // Stores the current user's UID
-  const pendingAlertsShown = {}; // To track alerts for pending status to avoid repeat alerts
+  let currentUser = null; 
+  const pendingAlertsShown = {}; 
   let cachedApprovedNumbersData = {}; // To store the snapshot of approved numbers for withdrawal
 
   let loginAttempts = 0; // Track failed login attempts
@@ -430,4 +427,3 @@
   document.addEventListener('DOMContentLoaded', () => {
     // Any setup that needs to run after HTML is parsed goes here
   });
-</script>
