@@ -16,8 +16,8 @@
       background: #ffffff;
       padding: 25px; /* Slightly reduced padding for mobile */
       border-radius: 3px;
-      box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
-      width: 100%;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      width: 100vh;
       max-width: 720px; /* Increased max-width for better mobile display */
       box-sizing: border-box;
       position: relative;
