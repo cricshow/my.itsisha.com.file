@@ -1,4 +1,5 @@
 
+
   // Your Firebase Configuration (Keep it secure in a real app!)
   const firebaseConfig = {
     apiKey: "AIzaSyBNhvhiGQiZ3t7-FNEGl46Xi4XYrFsHgLc", // Replace with your actual API Key
@@ -10,14 +11,58 @@
     appId: "1:764227278305:web:038a8cd3f0aff2af65aea0"
   };
 
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.database();
+  // Initialize Firebase (Only if firebase-app-compat.js is loaded)
+  // We use DOMContentLoaded to ensure the script is executed after HTML is parsed
+  // And Firebase JS files are loaded (due to 'defer' attribute)
+  document.addEventListener('DOMContentLoaded', () => {
+    // Check if Firebase is available (after defer load)
+    if (typeof firebase !== 'undefined' && typeof firebase.initializeApp === 'function') {
+      firebase.initializeApp(firebaseConfig);
+      window.auth = firebase.auth();
+      window.db = firebase.database(); // Make them global or accessible
+
+      // Initial Auth State Check
+      auth.onAuthStateChanged(user => {
+        if (user) {
+          currentUser = user.uid;
+          document.getElementById("userEmailDisplay").innerText = user.email; // Display user's email on load
+          showMain(); // If logged in, show the main dashboard
+          checkAndShowVideoPopup(); // Check for video popup after initial load and login state
+        } else {
+          switchToLogin(); // If not logged in, ensure login screen is visible
+        }
+      });
+
+      // --- Attach Event Listeners (using modern method) ---
+      document.getElementById("loginBtn").addEventListener("click", login);
+      document.getElementById("registerSwitchBtn").addEventListener("click", switchToRegister);
+      document.getElementById("forgotPasswordBtn").addEventListener("click", forgotPassword);
+      document.getElementById("registerBtn").addEventListener("click", register);
+      document.getElementById("loginSwitchBtn").addEventListener("click", switchToLogin);
+      document.getElementById("logoutBtn").addEventListener("click", logout);
+      document.getElementById("submitWithdrawBtn").addEventListener("click", submitWithdraw);
+      document.getElementById("addNumberBtn").addEventListener("click", addNumber);
+      document.getElementById("processWithdrawalBtn").addEventListener("click", processWithdrawal);
+      document.getElementById("hideWithdrawFormBtn").addEventListener("click", hideWithdrawForm);
+      document.getElementById("closeVideoTempBtn").addEventListener("click", closeVideoTemporarily);
+      document.getElementById("skipVideoPermBtn").addEventListener("click", skipVideoPermanently);
+
+      // Attach event listeners for payment methods
+      document.querySelectorAll(".payment-method-option").forEach(option => {
+          option.addEventListener("click", () => selectPaymentMethod(option.dataset.method));
+      });
+
+    } else {
+      console.error("Firebase SDK not loaded. Check CDN links or network.");
+      alert("Application could not load essential components. Please try again or check your internet connection.");
+    }
+  });
+
 
   let currentUser = null; // Stores the current user's UID
   const pendingAlertsShown = {}; // To track alerts for pending status to avoid repeat alerts
   let cachedApprovedNumbersData = {}; // To store the snapshot of approved numbers for withdrawal
+  let previousNumberStatuses = {}; // New: To store the previous status of numbers for alert logic
 
   let loginAttempts = 0; // Track failed login attempts
 
@@ -81,6 +126,7 @@
         document.getElementById("userEmailDisplay").innerText = userCredential.user.email; // Display user's email
         showMain();
         loginAttempts = 0; // Reset login attempts on successful login
+        checkAndShowVideoPopup(); // Check for video after successful login
       })
       .catch(err => {
         console.error("Login Error:", err);
@@ -107,7 +153,7 @@
   }
 
   function forgotPassword() {
-    const whatsappNumber = "03293250820"; // Replace with your WhatsApp number
+    const whatsappNumber = "+923293250820"; // Replace with your WhatsApp number
     const message = encodeURIComponent("Main Password Bhol Gia Pls Resend Me");
     const whatsappLink = `https://wa.me/${whatsappNumber}?text=${message}`;
     window.open(whatsappLink, '_blank'); // Open in new tab/window
@@ -117,6 +163,7 @@
     hideAllScreens(); // Hide all other screens
     document.getElementById("title").innerText = "Dashboard";
     document.getElementById("mainScreen").classList.add("visible");
+    loadNotifications(); // Load notifications when main screen is shown
     loadNumbers(); // Load numbers when main screen is shown
     loadWithdrawalHistory(); // Load withdrawal history
   }
@@ -150,7 +197,6 @@
             status: "Pending", // Default status
             amount: 1, // Initial amount is Rs. 1.00
             lastUpdate: Date.now(), // Timestamp for last update
-            previousStatus: "Pending" // Initialize previous status
           })
           .then(() => {
             alert("WhatsApp number added successfully!");
@@ -195,10 +241,13 @@
       if (!snap.exists() || snap.val() === null) {
         numberListDiv.innerHTML = "<p style='text-align: center; color: #888;'>No WhatsApp numbers added yet.</p>";
         document.getElementById("withdrawStatus").innerText = `Total Earned: Rs.${totalEarnedAmount.toFixed(2)}`;
+        // Clear previousNumberStatuses if no numbers exist
+        previousNumberStatuses = {};
         return;
       }
 
       const updatesForFirebase = {}; // Object to hold updates for Firebase batch update
+      const currentSnapshotStatuses = {}; // To store current statuses from this snapshot
 
       snap.forEach(childSnapshot => {
         const numberKey = childSnapshot.key;
@@ -206,28 +255,32 @@
         const currentStatus = numberData.status;
         let currentAmount = numberData.amount || 0;
         const lastUpdateTime = numberData.lastUpdate || 0;
-        const previousStatus = numberData.previousStatus || "Unknown"; // Default to Unknown if not set
-
-        // --- START OF MODIFICATION ---
-        // Removed the logic that cuts the amount when status changes from Approved to Pending.
-        // The amount will now only be reset upon successful withdrawal.
-        // --- END OF MODIFICATION ---
         
+        // Store current status for this snapshot
+        currentSnapshotStatuses[numberKey] = currentStatus;
+
+        // Check for status change from Approved to Pending and trigger alert
+        // Only alert if the previous status was 'Approved' and current is 'Pending'
+        // And if this particular pending alert hasn't been shown yet for this number
+        if (previousNumberStatuses[numberKey] === "Approved" && currentStatus === "Pending" && !pendingAlertsShown[numberKey]) {
+            alert(`Attention: Apka Number ${numberKey} Whatsapp Se Remove Howa Pls Usko Dobarah Add Krwa Lu`);
+            pendingAlertsShown[numberKey] = true; // Mark alert as shown for this number
+        } else if (currentStatus === "Approved") {
+            // If it's approved, ensure its pending alert flag is reset so it can trigger again if it goes pending
+            delete pendingAlertsShown[numberKey];
+        }
+
+
         // If current status is Approved, we still cache it for withdrawal calculation
         if (currentStatus === "Approved") {
              cachedApprovedNumbersData[numberKey] = { ...numberData, amount: currentAmount };
         }
         
-        // Always update previousStatus to currentStatus for next check
-        // This ensures the 'previousStatus' always reflects the last known status from Firebase,
-        // which can be used for other future logic if needed.
-        if (previousStatus !== currentStatus) {
-            updatesForFirebase[`/${numberKey}/previousStatus`] = currentStatus;
-        }
-
         totalEarnedAmount += currentAmount;
 
+        // Apply specific colors based on status
         const statusText = currentStatus === "Approved" ? "Approved ✅😍" : "Pending ❌😭";
+        // The CSS classes status-approved and status-pending already define the colors
         const statusClass = currentStatus === "Approved" ? "status-approved" : "status-pending";
 
         numberListDiv.innerHTML += `
@@ -240,7 +293,13 @@
         `;
       });
 
+      // After iterating through all numbers, update previousNumberStatuses for the next change detection
+      // This must happen AFTER all checks are done for the current snapshot
+      previousNumberStatuses = { ...currentSnapshotStatuses }; // Update with the statuses from the current snapshot
+
       // Apply all updates to Firebase in one go if there are any
+      // (Currently no updates are directly triggered in this loop based on your request, 
+      // but keeping the structure if needed for future modifications)
       if (Object.keys(updatesForFirebase).length > 0) {
         userNumbersRef.update(updatesForFirebase)
           .catch(err => console.error("Error updating numbers in batch:", err));
@@ -267,12 +326,16 @@
       document.getElementById("withdrawFormScreen").style.display = "none";
   }
 
-  function selectPaymentMethod(methodId) {
+  function selectPaymentMethod(method) {
       document.querySelectorAll(".payment-method-option").forEach(option => {
           option.classList.remove("selected");
       });
-      document.getElementById(methodId.toLowerCase()).classList.add("selected");
-      document.getElementById("selectedPaymentMethod").value = methodId;
+      // Find the option by its data-method attribute
+      const selectedOption = document.querySelector(`.payment-method-option[data-method="${method}"]`);
+      if (selectedOption) {
+          selectedOption.classList.add("selected");
+          document.getElementById("selectedPaymentMethod").value = method;
+      }
   }
 
   // --- Withdraw Function ---
@@ -411,22 +474,109 @@
       });
   }
 
-  // --- Initial Auth State Check ---
-  // This runs when the page loads to check if a user is already logged in
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      currentUser = user.uid;
-      document.getElementById("userEmailDisplay").innerText = user.email; // Display user's email on load
-      showMain(); // If logged in, show the main dashboard
-    } else {
-      switchToLogin(); // If not logged in, ensure login screen is visible
+  // --- Notifications Function ---
+  function loadNotifications() {
+      const notificationListDiv = document.getElementById("notificationList");
+      const notificationsRef = db.ref("notifications"); // Path to your notifications in Firebase
+
+      notificationsRef.on("value", snap => {
+          notificationListDiv.innerHTML = ""; // Clear previous list
+          if (!snap.exists() || snap.val() === null) {
+              notificationListDiv.innerHTML = "<p style='text-align: center; color: #888;'>No new notifications.</p>";
+              return;
+          }
+
+          const notifications = [];
+          snap.forEach(childSnapshot => {
+              const notificationData = childSnapshot.val();
+              if (typeof notificationData === 'object' && notificationData !== null && notificationData.message) { 
+                notifications.push({
+                    id: childSnapshot.key,
+                    message: notificationData.message,
+                    date: notificationData.date || null 
+                });
+              } else if (typeof notificationData === 'string') {
+                  notifications.push({
+                      id: childSnapshot.key,
+                      message: notificationData,
+                      date: null 
+                  });
+              }
+          });
+
+          notifications.sort((a, b) => {
+              if (a.date && b.date) {
+                  return new Date(b.date).getTime() - new Date(a.date).getTime();
+              }
+              return a.id.localeCompare(b.id);
+          });
+
+
+          if (notifications.length === 0) {
+              notificationListDiv.innerHTML = "<p style='text-align: center; color: #888;'>No new notifications.</p>";
+              return;
+          }
+
+          notifications.forEach(notification => {
+              const displayDate = notification.date ? formatTimestamp(notification.date) : '';
+              notificationListDiv.innerHTML += `
+                  <div class="notification-item">
+                      <p>${notification.message}</p>
+                      ${displayDate ? `<span class="notification-date">${displayDate}</span>` : ''}
+                  </div>
+              `;
+          });
+      }, error => {
+          console.error("Error loading notifications:", error);
+          notificationListDiv.innerHTML = "<p style='text-align: center; color: #dc3545;'>Error loading notifications.</p>";
+      });
+  }
+
+  // --- Video Popup Functions ---
+  function checkAndShowVideoPopup() {
+    // Check if the user has already permanently skipped the video
+    if (localStorage.getItem('videoPermanentlySkipped') === 'true') {
+        return; // Don't show again if permanently skipped
     }
-  });
+
+    const videoRef = db.ref("videoEmbedLink"); // Assuming video link is stored directly at 'videoEmbedLink'
+
+    videoRef.once("value")
+        .then(snap => {
+            const videoLink = snap.val();
+            if (videoLink) {
+                const videoContainer = document.getElementById("videoContainer");
+                let embedUrl = videoLink;
+                if (videoLink.includes("ok.ru/video/")) {
+                    embedUrl = videoLink.replace("ok.ru/video/", "ok.ru/videoembed/");
+                }
+
+                videoContainer.innerHTML = `<iframe src="${embedUrl}" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+                document.getElementById("videoPopupOverlay").style.display = "flex";
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching video link:", error);
+        });
+  }
+
+  function closeVideoTemporarily() {
+    document.getElementById("videoPopupOverlay").style.display = "none";
+    const videoContainer = document.getElementById("videoContainer");
+    videoContainer.innerHTML = '';
+  }
+
+  function skipVideoPermanently() {
+    document.getElementById("videoPopupOverlay").style.display = "none";
+    localStorage.setItem('videoPermanentlySkipped', 'true');
+    const videoContainer = document.getElementById("videoContainer");
+    videoContainer.innerHTML = '';
+  }
 
   // --- Disable Right-Click ---
   document.addEventListener('contextmenu', event => event.preventDefault());
 
-  // Ensure DOM is fully loaded before trying to access elements
-  document.addEventListener('DOMContentLoaded', () => {
-    // Any setup that needs to run after HTML is parsed goes here
-  });
+  // Make sure Firebase variables are accessible globally in older browsers/environments if needed,
+  // though DOMContentLoaded and event listeners solve most issues.
+  // window.auth = firebase.auth(); 
+  // window.db = firebase.database();
